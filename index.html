@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词记忆助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>单词记忆助手</h1>
+            <div class="mode-switch">
+                <button id="mode-en" class="mode-btn active">看英文选中文</button>
+                <button id="mode-cn" class="mode-btn">看中文选英文</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="word-display" id="word-display"></div>
+            <div class="options" id="options"></div>
+            <div class="stats-info" id="stats-info"></div>
+            <div class="action-buttons">
+                <button id="dont-know" class="action-btn">不认识</button>
+                <button id="too-easy" class="action-btn">太简单</button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <button id="reset-scores" class="control-btn">重置分值</button>
+            <button id="export-data" class="control-btn">保存并导出</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
+            <button id="import-data" class="control-btn">导入数据</button>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html> 
