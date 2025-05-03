@@ -214,14 +214,47 @@ class WordMemoryApp {
     exportData() {
         const dataStr = JSON.stringify(this.words, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
+        
+        // 生成日期时间格式的文件名
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const fileName = `${year}${month}${day}${hours}${minutes}${seconds}.json`;
+        console.log("文件名", fileName);
+        
+        // 创建一个临时的下载链接
         const a = document.createElement('a');
+        const url = URL.createObjectURL(dataBlob);
+        
+        // 设置下载属性
         a.href = url;
-        a.download = 'words.json';
+        a.download = fileName;
+        a.style.display = 'none';
+        
+        // 将元素添加到文档中
         document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        
+        // 创建一个点击事件
+        const clickEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+        });
+        
+        // 触发点击事件
+        a.dispatchEvent(clickEvent);
+        
+        // 清理
+        setTimeout(() => {
+            if (document.body.contains(a)) {
+                document.body.removeChild(a);
+            }
+            URL.revokeObjectURL(url);
+        }, 100);
     }
 
     handleFileImport(event) {
