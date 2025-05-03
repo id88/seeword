@@ -218,6 +218,8 @@ body {
     max-width: 800px;
     margin: 0 auto;
     font-size: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .word-list-header {
@@ -226,12 +228,14 @@ body {
     background-color: #f5f5f5;
     font-weight: bold;
     border-bottom: 2px solid #ddd;
+    min-width: 600px;
 }
 
 .word-list-row {
     display: flex;
     padding: 10px;
     border-bottom: 1px solid #eee;
+    min-width: 600px;
 }
 
 .word-list-row:hover {
@@ -281,4 +285,22 @@ body {
 
 .play-button:active {
     transform: scale(0.9);
+}
+
+.word-list-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.word-list-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.word-list-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.word-list-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
 } 
