@@ -3,7 +3,7 @@ class WordMemoryApp {
         this.words = {};
         this.currentWord = null;
         this.currentOptions = [];
-        this.mode = 'en'; // 'en' 或 'cn' 或 'spell'
+        this.mode = 'en'; // 'en' 或 'cn' 或 'spell' 或 'read'
         this.initializeElements();
         this.bindEvents();
     }
@@ -14,6 +14,7 @@ class WordMemoryApp {
         this.modeEnBtn = document.getElementById('mode-en');
         this.modeCnBtn = document.getElementById('mode-cn');
         this.modeSpellBtn = document.getElementById('mode-spell');
+        this.modeReadBtn = document.getElementById('mode-read');
         this.dontKnowBtn = document.getElementById('dont-know');
         this.tooEasyBtn = document.getElementById('too-easy');
         this.resetScoresBtn = document.getElementById('reset-scores');
@@ -27,6 +28,7 @@ class WordMemoryApp {
         this.modeEnBtn.addEventListener('click', () => this.switchMode('en'));
         this.modeCnBtn.addEventListener('click', () => this.switchMode('cn'));
         this.modeSpellBtn.addEventListener('click', () => this.switchMode('spell'));
+        this.modeReadBtn.addEventListener('click', () => this.switchMode('read'));
         this.dontKnowBtn.addEventListener('click', () => this.handleDontKnow());
         this.tooEasyBtn.addEventListener('click', () => this.handleTooEasy());
         this.resetScoresBtn.addEventListener('click', () => this.resetScores());
@@ -62,7 +64,18 @@ class WordMemoryApp {
         this.modeEnBtn.classList.toggle('active', mode === 'en');
         this.modeCnBtn.classList.toggle('active', mode === 'cn');
         this.modeSpellBtn.classList.toggle('active', mode === 'spell');
-        this.nextWord();
+        this.modeReadBtn.classList.toggle('active', mode === 'read');
+        
+        // 在阅读模式下隐藏统计信息和操作按钮
+        this.statsInfo.style.display = mode === 'read' ? 'none' : 'block';
+        this.dontKnowBtn.style.display = mode === 'read' ? 'none' : 'block';
+        this.tooEasyBtn.style.display = mode === 'read' ? 'none' : 'block';
+        
+        if (mode === 'read') {
+            this.displayWordList();
+        } else {
+            this.nextWord();
+        }
         this.updateStats();
     }
 
@@ -399,6 +412,69 @@ class WordMemoryApp {
         };
         reader.readAsText(file);
         event.target.value = ''; // 重置文件输入
+    }
+
+    displayWordList() {
+        // 清空显示区域
+        this.wordDisplay.innerHTML = '';
+        this.optionsContainer.innerHTML = '';
+        
+        // 创建单词列表容器
+        const wordListContainer = document.createElement('div');
+        wordListContainer.className = 'word-list-container';
+        
+        // 创建表头
+        const header = document.createElement('div');
+        header.className = 'word-list-header';
+        header.innerHTML = `
+            <div class="word-list-cell">英文单词</div>
+            <div class="word-list-cell">中文释义</div>
+            <div class="word-list-cell">总分值</div>
+            <div class="word-list-cell">发音</div>
+        `;
+        wordListContainer.appendChild(header);
+        
+        // 计算总分值并排序
+        const wordList = Object.entries(this.words)
+            .map(([word, data]) => ({
+                word,
+                chinese: data.chinese,
+                totalScore: data.en + data.cn + data.spell
+            }))
+            .sort((a, b) => {
+                if (b.totalScore !== a.totalScore) {
+                    return b.totalScore - a.totalScore;
+                }
+                return a.word.localeCompare(b.word);
+            });
+        
+        // 创建单词列表
+        wordList.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'word-list-row';
+            
+            // 创建播放按钮
+            const playButton = document.createElement('button');
+            playButton.className = 'play-button';
+            playButton.innerHTML = '🔊';
+            playButton.addEventListener('click', () => {
+                const audio = new Audio(`http://dict.youdao.com/dictvoice?type=2&audio=${item.word}`);
+                audio.play().catch(error => {
+                    console.error('播放音频失败:', error);
+                });
+            });
+            
+            row.innerHTML = `
+                <div class="word-list-cell">${item.word}</div>
+                <div class="word-list-cell">${item.chinese}</div>
+                <div class="word-list-cell">${item.totalScore}</div>
+                <div class="word-list-cell"></div>
+            `;
+            row.querySelector('.word-list-cell:last-child').appendChild(playButton);
+            wordListContainer.appendChild(row);
+        });
+        
+        this.wordDisplay.appendChild(wordListContainer);
     }
 }
 
