@@ -3,7 +3,7 @@ class WordMemoryApp {
         this.words = {};
         this.currentWord = null;
         this.currentOptions = [];
-        this.mode = 'en'; // 'en' 或 'cn'
+        this.mode = 'en'; // 'en' 或 'cn' 或 'spell'
         this.initializeElements();
         this.bindEvents();
     }
@@ -13,6 +13,7 @@ class WordMemoryApp {
         this.optionsContainer = document.getElementById('options');
         this.modeEnBtn = document.getElementById('mode-en');
         this.modeCnBtn = document.getElementById('mode-cn');
+        this.modeSpellBtn = document.getElementById('mode-spell');
         this.dontKnowBtn = document.getElementById('dont-know');
         this.tooEasyBtn = document.getElementById('too-easy');
         this.resetScoresBtn = document.getElementById('reset-scores');
@@ -25,6 +26,7 @@ class WordMemoryApp {
     bindEvents() {
         this.modeEnBtn.addEventListener('click', () => this.switchMode('en'));
         this.modeCnBtn.addEventListener('click', () => this.switchMode('cn'));
+        this.modeSpellBtn.addEventListener('click', () => this.switchMode('spell'));
         this.dontKnowBtn.addEventListener('click', () => this.handleDontKnow());
         this.tooEasyBtn.addEventListener('click', () => this.handleTooEasy());
         this.resetScoresBtn.addEventListener('click', () => this.resetScores());
@@ -59,6 +61,7 @@ class WordMemoryApp {
         this.mode = mode;
         this.modeEnBtn.classList.toggle('active', mode === 'en');
         this.modeCnBtn.classList.toggle('active', mode === 'cn');
+        this.modeSpellBtn.classList.toggle('active', mode === 'spell');
         this.nextWord();
         this.updateStats();
     }
@@ -132,26 +135,77 @@ class WordMemoryApp {
     }
 
     displayWord() {
-        this.wordDisplay.textContent = this.mode === 'en' 
-            ? this.currentWord.word 
-            : this.currentWord.chinese;
-
-        // 在英文模式下自动播放单词发音
-        if (this.mode === 'en') {
+        if (this.mode === 'spell') {
+            this.wordDisplay.textContent = this.currentWord.chinese;
+            
+            // 创建输入框容器
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'spell-input-container';
+            
+            // 为每个字母创建一个输入框
+            for (let i = 0; i < this.currentWord.word.length; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.className = 'spell-input';
+                input.dataset.index = i;
+                
+                // 添加输入事件监听
+                input.addEventListener('input', (e) => {
+                    // 自动聚焦到下一个输入框
+                    if (e.target.value && i < this.currentWord.word.length - 1) {
+                        inputContainer.children[i + 1].focus();
+                    }
+                });
+                
+                // 添加键盘事件监听
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && i > 0) {
+                        // 如果当前输入框为空且按退格键，则聚焦到上一个输入框
+                        inputContainer.children[i - 1].focus();
+                    } else if (e.key === 'Enter' && i === this.currentWord.word.length - 1) {
+                        // 在最后一个输入框按回车时提交答案
+                        this.handleSpellInput();
+                    }
+                });
+                
+                inputContainer.appendChild(input);
+            }
+            
+            this.wordDisplay.appendChild(inputContainer);
+            
+            // 播放音频
             const audio = new Audio(`http://dict.youdao.com/dictvoice?type=2&audio=${this.currentWord.word}`);
             audio.play().catch(error => {
                 console.error('播放音频失败:', error);
             });
-        }
+            
+            // 自动聚焦到第一个输入框
+            inputContainer.children[0].focus();
+            
+            // 清空选项区域
+            this.optionsContainer.innerHTML = '';
+        } else {
+            this.wordDisplay.textContent = this.mode === 'en' 
+                ? this.currentWord.word 
+                : this.currentWord.chinese;
 
-        this.optionsContainer.innerHTML = '';
-        this.currentOptions.forEach(option => {
-            const button = document.createElement('button');
-            button.className = 'option-btn';
-            button.textContent = this.mode === 'en' ? option.chinese : option.word;
-            button.addEventListener('click', () => this.handleOptionClick(option));
-            this.optionsContainer.appendChild(button);
-        });
+            if (this.mode === 'en') {
+                const audio = new Audio(`http://dict.youdao.com/dictvoice?type=2&audio=${this.currentWord.word}`);
+                audio.play().catch(error => {
+                    console.error('播放音频失败:', error);
+                });
+            }
+
+            this.optionsContainer.innerHTML = '';
+            this.currentOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = this.mode === 'en' ? option.chinese : option.word;
+                button.addEventListener('click', () => this.handleOptionClick(option));
+                this.optionsContainer.appendChild(button);
+            });
+        }
     }
 
     handleOptionClick(option) {
@@ -177,28 +231,98 @@ class WordMemoryApp {
         setTimeout(() => this.nextWord(), 1500);
     }
 
+    handleSpellInput() {
+        // 获取所有输入框的值
+        const inputs = this.wordDisplay.querySelectorAll('.spell-input');
+        const userInput = Array.from(inputs).map(input => input.value.toLowerCase()).join('');
+        const isCorrect = userInput === this.currentWord.word.toLowerCase();
+        
+        // 显示结果
+        const resultContainer = document.createElement('div');
+        resultContainer.className = 'spell-result';
+        
+        if (isCorrect) {
+            this.words[this.currentWord.word].spell--;
+            resultContainer.textContent = `正确！${this.currentWord.word}`;
+            resultContainer.classList.add('correct');
+            
+            // 标记正确的字母
+            inputs.forEach((input, index) => {
+                if (input.value.toLowerCase() === this.currentWord.word[index].toLowerCase()) {
+                    input.classList.add('correct');
+                }
+            });
+        } else {
+            resultContainer.textContent = `错误！正确答案是：${this.currentWord.word}`;
+            resultContainer.classList.add('wrong');
+            
+            // 标记正确的字母和错误的字母
+            inputs.forEach((input, index) => {
+                if (input.value.toLowerCase() === this.currentWord.word[index].toLowerCase()) {
+                    input.classList.add('correct');
+                } else {
+                    input.classList.add('wrong');
+                }
+            });
+        }
+        
+        this.wordDisplay.appendChild(resultContainer);
+        
+        // 播放音频
+        const audio = new Audio(`http://dict.youdao.com/dictvoice?type=2&audio=${this.currentWord.word}`);
+        audio.play().catch(error => {
+            console.error('播放音频失败:', error);
+        });
+        
+        this.updateStats();
+        setTimeout(() => this.nextWord(), 2000);
+    }
+
     handleDontKnow() {
-        this.words[this.currentWord.word][this.mode]++;
-        this.showCorrectAnswer();
+        if (this.mode === 'spell') {
+            this.words[this.currentWord.word].spell++;
+            this.showCorrectAnswer();
+        } else {
+            this.words[this.currentWord.word][this.mode]++;
+            this.showCorrectAnswer();
+        }
         this.updateStats();
     }
 
     handleTooEasy() {
-        this.words[this.currentWord.word][this.mode] = 0;
-        this.showCorrectAnswer();
+        if (this.mode === 'spell') {
+            this.words[this.currentWord.word].spell = 0;
+            this.showCorrectAnswer();
+        } else {
+            this.words[this.currentWord.word][this.mode] = 0;
+            this.showCorrectAnswer();
+        }
         this.updateStats();
     }
 
     showCorrectAnswer() {
-        const buttons = this.optionsContainer.querySelectorAll('.option-btn');
-        buttons.forEach(btn => {
-            const btnOption = this.currentOptions.find(opt => 
-                (this.mode === 'en' ? opt.chinese : opt.word) === btn.textContent
-            );
-            if (btnOption.word === this.currentWord.word) {
-                btn.classList.add('correct');
-            }
-        });
+        if (this.mode === 'spell') {
+            const resultContainer = document.createElement('div');
+            resultContainer.className = 'spell-result';
+            resultContainer.textContent = `正确答案是：${this.currentWord.word}`;
+            this.wordDisplay.appendChild(resultContainer);
+            
+            // 播放音频
+            const audio = new Audio(`http://dict.youdao.com/dictvoice?type=2&audio=${this.currentWord.word}`);
+            audio.play().catch(error => {
+                console.error('播放音频失败:', error);
+            });
+        } else {
+            const buttons = this.optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                const btnOption = this.currentOptions.find(opt => 
+                    (this.mode === 'en' ? opt.chinese : opt.word) === btn.textContent
+                );
+                if (btnOption.word === this.currentWord.word) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
         setTimeout(() => this.nextWord(), 1500);
     }
 
@@ -206,6 +330,7 @@ class WordMemoryApp {
         Object.values(this.words).forEach(word => {
             word.en = 5;
             word.cn = 5;
+            word.spell = 5;
         });
         this.nextWord();
         this.updateStats();

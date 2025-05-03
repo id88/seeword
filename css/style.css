@@ -145,4 +145,68 @@ body {
     border-radius: 5px;
     font-size: 0.9em;
     color: #666;
+}
+
+.spell-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.underline-container {
+    font-size: 24px;
+    letter-spacing: 5px;
+    color: #666;
+}
+
+.spell-input-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.spell-input {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 32px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+}
+
+.spell-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+.spell-input.correct {
+    background-color: #dff0d8;
+    border-color: #3c763d;
+}
+
+.spell-input.wrong {
+    background-color: #f2dede;
+    border-color: #a94442;
+}
+
+.spell-result {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 18px;
+    text-align: center;
+}
+
+.spell-result.correct {
+    background-color: #dff0d8;
+    color: #3c763d;
+}
+
+.spell-result.wrong {
+    background-color: #f2dede;
+    color: #a94442;
 } 
