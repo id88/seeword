@@ -136,6 +136,14 @@ class WordMemoryApp {
             ? this.currentWord.word 
             : this.currentWord.chinese;
 
+        // 在英文模式下自动播放单词发音
+        if (this.mode === 'en') {
+            const audio = new Audio(`http://dict.youdao.com/dictvoice?type=2&audio=${this.currentWord.word}`);
+            audio.play().catch(error => {
+                console.error('播放音频失败:', error);
+            });
+        }
+
         this.optionsContainer.innerHTML = '';
         this.currentOptions.forEach(option => {
             const button = document.createElement('button');
